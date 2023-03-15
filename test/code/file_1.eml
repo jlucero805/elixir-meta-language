@@ -1,0 +1,48 @@
+val fib <- fn (n)
+    let
+        val go <- fn (x, left, right)
+            if x < n
+            then go(x + 1, left + right, left)
+            else left + right
+    in
+        if n = 1
+        then 1
+        else if n = 2
+        then 1
+        else go(3, 1, 1)
+
+val exp <- fn (a, b)
+    let
+        val go <- fn (a, b, acc)
+            if b > 0
+            then go(a, b - 1, acc * a)
+            else acc
+    in go(a, b, 1)
+
+val abs <- fn(a)
+    if a >= 0
+    then a
+    else -a
+
+val fact <- fn (n)
+    let
+        val go <- fn(i, acc)
+            if i < n
+            then go(i + 1, i * acc)
+            else i * acc
+    in go(1, 1)
+
+print("factorial of 5:")
+val fact5 <- fact(5)
+print(fact5)
+assert(fact5 = 120)
+print("")
+
+print("absolute value of -1:")
+val abs1 <- abs(-1)
+print(abs1)
+assert(abs1 = 1)
+print("")
+
+
+print(exp(2, 2))
