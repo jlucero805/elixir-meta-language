@@ -1,5 +1,5 @@
 defmodule FnExpression do
-  defstruct [:params, :expr, :is_native, :native_function]
+  defstruct [:params, :expr, :is_native, :native_function, :clenv]
 
   def native(name, args) do
     case name do

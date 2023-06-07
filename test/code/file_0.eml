@@ -1,0 +1,11 @@
+val one <-
+    fn (f)
+        fn (a)
+            f(a)
+
+val two <-
+    fn (f)
+        fn (a)
+            f(f(a))
+
+

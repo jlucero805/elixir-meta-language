@@ -1,7 +1,7 @@
 defmodule Interpreter do
-  def interpret([stmt | stmts]), do: interpret([stmt | stmts], native_functions)
+  def interpret([stmt | stmts]), do: interpret([stmt | stmts], (native_functions))
   def interpret([], _env), do: nil
-  def interpret([stmt | stmts], env), do: interpret(stmts, execute(env, stmt)|>(elem 0))
+  def interpret(stmts, env), do: Enum.reduce(stmts, env, &(execute(&2, &1) |> elem(0)))
 
   def native_functions() do
     Environment.new
@@ -25,7 +25,7 @@ defmodule Interpreter do
     |> (elem 0)
     |> evaluate_let(stmts, expr)
 
-  def evaluate(env, %FnExpression{} = expr), do: {env, expr}
+  def evaluate(env, %FnExpression{} = expr), do: {env, %{expr | clenv: env}}
 
   def evaluate(env, %IfExpression{} = expr) do
     {env, value} = evaluate(env, expr.if)
@@ -38,30 +38,32 @@ defmodule Interpreter do
 
   def evaluate(env, %CallExpression{} = expr) do
     {nenv, callee} = evaluate(env, expr.callee)
-    fun = Environment.get(env, expr.callee.name)
+    fun =
+    if Map.has_key?(expr.callee, :name) do
+      Environment.get(env, expr.callee.name)
+    else
+      callee
+    end
     if fun.is_native == true do
       {env, FnExpression.native(expr.callee.name, evaluate_args(expr.arguments, [], env) |> (elem 1))}
     else
       {nnenv, args} = evaluate_args(expr.arguments, [], nenv)
-      {env, evaluate_call(fun, args, env)}
+      {env, evaluate_call(fun, args, Environment.extend(env, fun.clenv))}
     end
   end
 
-  def evaluate_call(%FnExpression{} = f, args, closure) do
+  def evaluate_call(%FnExpression{} = f, args, closure), do:
     Environment.new(closure)
     |> (&(put_args(f.params, args, &1))).()
     |> (&(evaluate(&1, f.expr))).()
     |> (elem 1)
-  end
 
   def put_args([], [], env), do: env
   def put_args([param | params], [arg | args], env), do:
     Environment.put(env, param, arg)
     |> (&(put_args(params, args, &1))).()
 
-  def evaluate_args([], evaluated, env) do
-    {env, evaluated |> Enum.reverse}
-  end
+  def evaluate_args([], evaluated, env), do: {env, evaluated |> Enum.reverse}
   def evaluate_args([arg | args], evaluated, env) do
     {nenv, expr} = evaluate(env, arg)
     evaluate_args(args, [expr | evaluated], nenv)

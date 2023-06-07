@@ -5,6 +5,10 @@ defmodule Environment do
 
   def new(e), do: %Environment{values: %{}, enclosing: e}
 
+  def extend(og, new) do
+    %Environment{new | enclosing: og}
+  end
+
   def has_key?(%Environment{} = e, key) do
     Map.has_key?(e.values, key)
   end
